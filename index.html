@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Shoes Store POS & Inventory v2.6 Online Realtime" />
+  <title>Shoes Store POS & Inventory v2.6</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast"></div>
+
+  <section id="loginView" class="login-shell">
+    <div class="login-card">
+      <div class="brand-mark">SS</div>
+      <h1 id="loginStoreName">Shoes Store POS</h1>
+      <p>Penjualan, stok, laba & monitoring toko secara realtime</p>
+      <form id="loginForm">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="owner@toko.com" required autocomplete="username" />
+        <label>Password</label>
+        <div class="password-row"><input id="password" type="password" placeholder="••••••••" required autocomplete="current-password" /><button id="togglePassword" type="button" class="ghost compact">Lihat</button></div>
+        <button class="primary full" type="submit">Masuk</button>
+      </form>
+      <small id="connectionInfo">Menghubungkan ke database…</small>
+    </div>
+  </section>
+
+  <div id="appView" class="app-shell hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">SS</div>
+        <div><strong id="storeNameSide">Shoes Store</strong><span>POS & Inventory</span></div>
+      </div>
+      <nav id="navMenu"></nav>
+      <div class="sidebar-user">
+        <div><strong id="userName">User</strong><span id="userRole">role</span></div>
+        <button id="logoutBtn" class="ghost">Keluar</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left"><button id="menuToggle" class="icon-btn mobile-only">☰</button><div><h2 id="pageTitle">Dashboard</h2><p id="pageSubtitle">Monitoring toko</p></div></div>
+        <div class="topbar-actions"><span id="clock"></span><div class="live"><span></span> Realtime</div><button id="installBtn" class="ghost compact hidden">Install App</button></div>
+      </header>
+      <section id="content"></section>
+    </main>
+  </div>
+
+  <dialog id="checkoutDialog">
+    <form method="dialog" class="dialog-card wide" id="checkoutForm">
+      <div class="dialog-head"><h3>Pembayaran</h3><button value="cancel" class="icon-btn">✕</button></div>
+      <div id="checkoutSummary" class="checkout-summary"></div>
+      <div class="form-grid">
+        <label>Diskon Transaksi (Rp)<input id="saleDiscount" type="number" min="0" value="0" /></label>
+        <label>Metode Pembayaran<select id="paymentMethod"><option>Tunai</option><option>QRIS</option><option>Transfer</option><option>Debit</option><option>Kredit</option><option>E-Wallet</option></select></label>
+        <label class="span2">Uang Dibayar<input id="paidAmount" type="number" min="0" /></label>
+      </div>
+      <div class="change-box">Total Akhir <strong id="checkoutNet">Rp0</strong></div>
+      <div class="change-box">Kembalian <strong id="changeAmount">Rp0</strong></div>
+      <button id="confirmCheckout" type="button" class="primary full">Selesaikan Transaksi</button>
+    </form>
+  </dialog>
+
+  <dialog id="receiptDialog"><div class="dialog-card receipt-dialog"><div class="dialog-head no-print"><h3>Struk</h3><button class="icon-btn" onclick="document.getElementById('receiptDialog').close()">✕</button></div><div id="receiptContent"></div><div class="receipt-actions no-print"><button id="printReceipt" class="primary">Cetak Struk</button><button class="ghost" onclick="document.getElementById('receiptDialog').close()">Tutup</button></div></div></dialog>
+
+  <dialog id="barcodeDialog"><div class="dialog-card"><div class="dialog-head"><h3>Label Barcode</h3><button class="icon-btn" onclick="document.getElementById('barcodeDialog').close()">✕</button></div><div id="barcodeContent" class="barcode-label"></div><button id="printBarcode" class="primary full">Cetak Label</button></div></dialog>
+
+  <dialog id="editProductDialog">
+    <div class="dialog-card wide">
+      <div class="dialog-head"><h3>Edit Produk</h3><button class="icon-btn" onclick="document.getElementById('editProductDialog').close()">✕</button></div>
+      <input id="editProductId" type="hidden" /><input id="editVariantId" type="hidden" />
+      <div class="form-grid">
+        <label>SKU<input id="eSku" /></label><label>Nama Produk<input id="eName" /></label>
+        <label>Brand<input id="eBrand" /></label><label>Kategori<input id="eCategory" /></label>
+        <label>Harga Modal<input id="eCost" type="number" min="0" /></label><label>Harga Jual<input id="eSale" type="number" min="0" /></label>
+        <label>Ukuran<input id="eSize" /></label><label>Warna<input id="eColor" /></label>
+        <label>Barcode<input id="eBarcode" /></label><label>Stok Minimum<input id="eMinStock" type="number" min="0" /></label>
+      </div>
+      <p class="help-text">Stok aktual tidak diedit dari sini agar histori stok tetap akurat. Gunakan menu Stock Opname untuk koreksi jumlah stok.</p>
+      <button id="saveProductEdit" type="button" class="primary full">Simpan Perubahan</button>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
